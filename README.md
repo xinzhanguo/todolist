@@ -17,6 +17,7 @@ CREATE TABLE `todos` (
 
 ## 示例
 
+![](https://raw.githubusercontent.com/xinzhanguo/todolist/refs/heads/main/todo1.jpg)
 
 ## 使用方法
 
