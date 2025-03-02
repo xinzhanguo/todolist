@@ -13,3 +13,14 @@ CREATE TABLE `todos` (
   UNIQUE KEY `uid_index` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='todos table';
 ```
+
+
+## 示例
+
+
+## 使用方法
+
+```
+docker build -t todo:1 .
+docker run -d --name todo --restart=always todo:1
+```
