@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建项目</title>
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <style>
+        /* 重置基本样式 */
+        body,
+        h1,
+        p,
+        button {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 设置页面背景和字体 */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+
+        /* 容器样式 */
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 标题样式 */
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        /* 段落样式 */
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #666;
+        }
+
+        /* 按钮样式 */
+        .create-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .create-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>创建新项目</h1>
+        <p>点击下方按钮开始创建您的项目。</p>
+        <form action="/todo/new" rel="nofollow" method="get">
+            <button class="create-btn" rel="nofollow" type="submit">创建项目</button>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f5f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        .board {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px;
+            gap: 10px;
+        }
+
+        .list {
+            background-color: #ebecf0;
+            border-radius: 4px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .list h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+
+        .cards {
+            min-height: 100px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: grab;
+            user-select: none;
+            position: relative;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.fade-out {
+            opacity: 0;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+
+        .card:hover .delete-btn {
+            display: block;
+        }
+
+        .restore-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #0079bf;
+            cursor: pointer;
+            font-size: 14px;
+            display: none;
+        }
+
+        .card:hover .restore-btn {
+            display: block;
+        }
+
+        .add-card-btn {
+            background: none;
+            border: none;
+            color: #5e6c84;
+            cursor: pointer;
+            padding: 5px;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .add-card-btn:hover {
+            background-color: #ddd;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 0;
+            padding: 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: none;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #0079bf;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #005f8d;
+        }
+
+        /* Responsive Styles */
+        @media (min-width: 600px) {
+            .list {
+                width: calc(50% - 20px);
+            }
+        }
+
+        @media (min-width: 900px) {
+            .list {
+                width: calc(33.33% - 20px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="board">
+        <div class="list" id="todo">
+            <h2>To Do</h2>
+            <div class="cards" id="todo-cards"></div>
+            <button class="add-card-btn" onclick="openModal('todo')">+ Add a card</button>
+        </div>
+        <div class="list" id="in-progress">
+            <h2>In Progress</h2>
+            <div class="cards" id="in-progress-cards"></div>
+            <button class="add-card-btn" onclick="openModal('in-progress')">+ Add a card</button>
+        </div>
+        <div class="list" id="done">
+            <h2>Done</h2>
+            <div class="cards" id="done-cards"></div>
+            <button class="add-card-btn" onclick="openModal('done')">+ Add a card</button>
+        </div>
+        <div class="list" id="trash">
+            <h2>Trash</h2>
+            <div class="cards" id="trash-cards"></div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing cards -->
+    <div id="card-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Add Card</h2>
+            <textarea id="card-content" placeholder="Enter card content..."></textarea>
+            <button onclick="saveCard()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        let draggedCard = null;
+        let currentListId = null;
+        let isEditing = false;
+        let editingCard = null;
+        function getuid() {
+            const path = window.location.pathname.split('/');
+            const uid = path[path.length - 1];
+            console.log(uid);
+            return uid;
+        }
+        function get(uid) {
+            fetch("/api/" + uid, {
+                method: "GET",
+            }).then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    const { todo, inProgress, done, trash } = data;
+                    renderCards("todo-cards", todo);
+                    renderCards("in-progress-cards", inProgress);
+                    renderCards("done-cards", done);
+                    renderCards("trash-cards", trash, true);
+                    return data;
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        function save(uid, data) {
+            // 使用 fetch 发送 POST 请求
+            fetch("/api/" + uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: JSON.stringify(data) // 将数据转换为 JSON 字符串
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    console.log("Success:", data); // 处理成功响应
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        // Load data from localStorage
+        function loadData() {
+            const savedData = get(getuid());
+            console.log(savedData);
+            if (savedData) {
+                // const { todo, inProgress, done, trash } = JSON.parse(savedData);
+                const { todo, inProgress, done, trash } = savedData;
+                renderCards("todo-cards", todo);
+                renderCards("in-progress-cards", inProgress);
+                renderCards("done-cards", done);
+                renderCards("trash-cards", trash, true);
+            }
+        }
+
+        // Render cards to a list
+        function renderCards(listId, cards, isTrash = false) {
+            const container = document.getElementById(listId);
+            container.innerHTML = "";
+            cards.forEach(content => {
+                const card = createCard(content, isTrash);
+                container.appendChild(card);
+            });
+        }
+
+        // Create a card element
+        function createCard(content, isTrash = false) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.draggable = !isTrash;
+
+            // Card content
+            const cardContent = document.createElement("span");
+            cardContent.textContent = content;
+            card.appendChild(cardContent);
+
+            // Delete button
+            const deleteBtn = document.createElement("button");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "&times;";
+            deleteBtn.onclick = () => {
+                if (card.parentElement.id === "trash-cards") {
+                    // If the card is already in the trash, permanently delete it
+                    if (confirm("Are you sure you want to permanently delete this card?")) {
+                        card.remove();
+                        saveData();
+                    }
+                } else {
+                    // If the card is not in the trash, move it to the trash
+                    if (confirm("Are you sure you want to delete this card?")) {
+                        card.classList.add("fade-out");
+                        setTimeout(() => {
+                            document.getElementById("trash-cards").appendChild(card);
+                            card.classList.remove("fade-out");
+                            saveData();
+                        }, 300);
+                    }
+                }
+            };
+            card.appendChild(deleteBtn);
+
+            // Restore button (for trash cards)
+            if (isTrash) {
+                const restoreBtn = document.createElement("button");
+                restoreBtn.className = "restore-btn";
+                restoreBtn.textContent = "Restore";
+                restoreBtn.onclick = () => {
+                    card.remove();
+                    document.getElementById("todo-cards").appendChild(card);
+                    saveData();
+                };
+                card.appendChild(restoreBtn);
+            }
+
+            // Double-click to edit
+            card.addEventListener("dblclick", () => {
+                openModal(card.parentElement.id.replace("-cards", ""));
+                document.getElementById("card-content").value = cardContent.textContent;
+                isEditing = true;
+                editingCard = card;
+            });
+
+            // Drag and drop
+            card.addEventListener("dragstart", () => {
+                draggedCard = card;
+                setTimeout(() => card.style.display = "none", 0);
+            });
+
+            card.addEventListener("dragend", () => {
+                setTimeout(() => {
+                    draggedCard.style.display = "block";
+                    draggedCard = null;
+                }, 0);
+                saveData();
+            });
+
+            return card;
+        }
+
+        // Open modal
+        function openModal(listId) {
+            currentListId = listId;
+            document.getElementById("card-modal").style.display = "flex";
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById("card-modal").style.display = "none";
+            document.getElementById("card-content").value = "";
+            isEditing = false;
+            editingCard = null;
+        }
+
+        // Save card
+        function saveCard() {
+            const cardContent = document.getElementById("card-content").value.trim();
+            if (cardContent) {
+                if (isEditing) {
+                    editingCard.querySelector("span").textContent = cardContent;
+                } else {
+                    const card = createCard(cardContent);
+                    document.getElementById(`${currentListId}-cards`).appendChild(card);
+                }
+                saveData();
+                closeModal();
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            const todo = Array.from(document.getElementById("todo-cards").children).map(card => card.querySelector("span").textContent);
+            const inProgress = Array.from(document.getElementById("in-progress-cards").children).map(card => card.querySelector("span").textContent);
+            const done = Array.from(document.getElementById("done-cards").children).map(card => card.querySelector("span").textContent);
+            const trash = Array.from(document.getElementById("trash-cards").children).map(card => card.querySelector("span").textContent);
+
+            const data = {
+                todo,
+                inProgress,
+                done,
+                trash
+            };
+            localStorage.setItem("trelloData", JSON.stringify(data));
+            save(getuid(), data);
+        }
+
+        // Initialize: Load data
+        loadData();
+
+        // Drag and drop logic
+        document.querySelectorAll(".cards").forEach(cardsContainer => {
+            cardsContainer.addEventListener("dragover", e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(cardsContainer, e.clientY);
+                if (afterElement == null) {
+                    cardsContainer.appendChild(draggedCard);
+                } else {
+                    cardsContainer.insertBefore(draggedCard, afterElement);
+                }
+            });
+        });
+
+        // Get the element after which the dragged card should be placed
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll(".card:not(.dragging)")];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    </script>
+</body>
+
+</html>
