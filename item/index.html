@@ -205,7 +205,11 @@
             <div class="cards" id="trash-cards"></div>
         </div>
     </div>
-
+    <div style="
+        position: absolute;
+        top: 0px;
+        right: 2px;
+    "><button onclick="openShareModal()">S</button></div>
     <!-- Modal for adding/editing cards -->
     <div id="card-modal" class="modal">
         <div class="modal-content">
@@ -213,6 +217,16 @@
             <h2 id="modal-title">Add Card</h2>
             <textarea id="card-content" placeholder="Enter card content..."></textarea>
             <button onclick="saveCard()">Save</button>
+        </div>
+    </div>
+    <!-- Modal for adding/editing cards -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeShareModal()">&times;</span>
+            <h2 id="modal-title">Setting Board</h2>
+            <span>复制分享连接</span>
+            <span>设置密码</span>
+            <button onclick="savePassCard()">Save</button>
         </div>
     </div>
 
@@ -364,12 +378,19 @@
             document.getElementById("card-modal").style.display = "flex";
         }
 
+        function openShareModal() {
+            document.getElementById("share-modal").style.display = "flex";
+        }
+
         // Close modal
         function closeModal() {
             document.getElementById("card-modal").style.display = "none";
             document.getElementById("card-content").value = "";
             isEditing = false;
             editingCard = null;
+        }
+        function closeShareModal() {
+            document.getElementById("share-modal").style.display = "none";
         }
 
         // Save card
