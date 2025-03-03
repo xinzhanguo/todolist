@@ -170,50 +170,50 @@
         }
 
         .settings-btn {
-    background-color: #005f8d;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-}
+            background-color: #005f8d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-.settings-btn:hover {
-    background-color: #004c70;
-}
+        .settings-btn:hover {
+            background-color: #004c70;
+        }
 
-/* Setting Item Styles */
-.setting-item {
-    margin-bottom: 20px;
-}
+        /* Setting Item Styles */
+        .setting-item {
+            margin-bottom: 20px;
+        }
 
-.setting-item label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
 
-.setting-item input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
+        .setting-item input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
 
-.setting-item button {
-    margin-top: 10px;
-    padding: 8px 16px;
-    background-color: #0079bf;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+        .setting-item button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #0079bf;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
 
-.setting-item button:hover {
-    background-color: #005f8d;
-}
+        .setting-item button:hover {
+            background-color: #005f8d;
+        }
 
         /* Responsive Styles */
         @media (min-width: 600px) {
@@ -514,51 +514,51 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
         // Open settings modal
-function openSettingsModal() {
-    document.getElementById("settings-modal").style.display = "flex";
-}
+        function openSettingsModal() {
+            document.getElementById("settings-modal").style.display = "flex";
+        }
 
-// Close settings modal
-function closeSettingsModal() {
-    document.getElementById("settings-modal").style.display = "none";
-}
+        // Close settings modal
+        function closeSettingsModal() {
+            document.getElementById("settings-modal").style.display = "none";
+        }
 
-// Set admin password
-function setAdminPassword() {
-    const adminPassword = document.getElementById("admin-password").value.trim();
-    if (adminPassword) {
-        localStorage.setItem("adminPassword", adminPassword);
-        alert("Admin password saved!");
-    } else {
-        alert("Please enter a valid admin password.");
-    }
-}
+        // Set admin password
+        function setAdminPassword() {
+            const adminPassword = document.getElementById("admin-password").value.trim();
+            if (adminPassword) {
+                localStorage.setItem("adminPassword", adminPassword);
+                alert("Admin password saved!");
+            } else {
+                alert("Please enter a valid admin password.");
+            }
+        }
 
-// Set share password
-function setSharePassword() {
-    const sharePassword = document.getElementById("share-password").value.trim();
-    if (sharePassword) {
-        localStorage.setItem("sharePassword", sharePassword);
-        alert("Share password saved!");
-    } else {
-        alert("Please enter a valid share password.");
-    }
-}
+        // Set share password
+        function setSharePassword() {
+            const sharePassword = document.getElementById("share-password").value.trim();
+            if (sharePassword) {
+                localStorage.setItem("sharePassword", sharePassword);
+                alert("Share password saved!");
+            } else {
+                alert("Please enter a valid share password.");
+            }
+        }
 
-// Load saved passwords on page load
-function loadPasswords() {
-    const adminPassword = localStorage.getItem("adminPassword");
-    const sharePassword = localStorage.getItem("sharePassword");
+        // Load saved passwords on page load
+        function loadPasswords() {
+            const adminPassword = localStorage.getItem("adminPassword");
+            const sharePassword = localStorage.getItem("sharePassword");
 
-    if (adminPassword) {
-        document.getElementById("admin-password").value = adminPassword;
-    }
-    if (sharePassword) {
-        document.getElementById("share-password").value = sharePassword;
-    }
-}
+            if (adminPassword) {
+                document.getElementById("admin-password").value = adminPassword;
+            }
+            if (sharePassword) {
+                document.getElementById("share-password").value = sharePassword;
+            }
+        }
         // Initialize: Load passwords
-loadPasswords();
+        loadPasswords();
     </script>
 </body>
 
