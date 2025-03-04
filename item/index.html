@@ -341,8 +341,8 @@
             fetch("/api/key/" + uid, {
                 method: "POST", // 指定请求方法为 POST
                 headers: {
-                    "ML_KEY": getkey(uid),
-                    "ML_CODE": getcode(uid),
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid),
                     "Content-Type": "application/json" // 设置请求头
                 },
                 body: key // 将数据转换为 JSON 字符串
@@ -356,7 +356,7 @@
                 });
         }
         function getcode(uid) {
-            const data = localStorage.getItem("todocode");
+            const data = localStorage.getItem("tdcode");
             if (data) {
                 keyMap = JSON.parse(data);
                 if (uid in keyMap) {
@@ -366,20 +366,20 @@
             return "";
         }
         function setcode(uid, code) {
-            const keysData = localStorage.getItem("todocode");
+            const keysData = localStorage.getItem("tdcode");
             let keyMap = {}
             if (keysData) {
                 keyMap = JSON.parse(keysData);
             }
-            keyMap[uid] = key
-            localStorage.setItem("todocode",JSON.stringify(keyMap))
+            keyMap[uid] = code
+            localStorage.setItem("tdcode",JSON.stringify(keyMap))
         }
         function resetcode(uid, code) {
             fetch("/api/code/" + uid, {
                 method: "POST", // 指定请求方法为 POST
                 headers: {
-                    "ML_KEY": getkey(uid),
-                    "ML_CODE": getcode(uid),
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid),
                     "Content-Type": "application/json" // 设置请求头
                 },
                 body: code // 将数据转换为 JSON 字符串
@@ -441,25 +441,7 @@
                     console.error("Error:", error); // 处理错误
                 });
         }
-        function setcode(code) {
-            uid = getuid()
-            fetch("/api/code/" + uid, {
-                method: "POST", // 指定请求方法为 POST
-                headers: {
-                    "Ml-Key": getkey(uid),
-                    "Ml-Code": getcode(uid),
-                    "Content-Type": "application/json" // 设置请求头
-                },
-                body: code
-            })
-                .then(response => response.json()) // 解析响应为 JSON
-                .then(data => {
-                    console.log("Success:", data); // 处理成功响应
-                })
-                .catch((error) => {
-                    console.error("Error:", error); // 处理错误
-                });
-        }
+
         // Load data from localStorage
         function loadData() {
             const savedData = get(getuid());
@@ -691,7 +673,7 @@
             const sharePassword = document.getElementById("share-password").value.trim();
             if (sharePassword) {
                 resetcode(getuid(),sharePassword);
-                loadData();
+                // loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
             } else {
@@ -701,8 +683,11 @@
 
         function showSharePassword() {
             const sharePassword = document.getElementById("show-share-password").value.trim();
+            console.log(sharePassword)
             if (sharePassword) {
-                setcode(getuid(),sharePassword)
+                setcode(getuid(),sharePassword);
+                console.log("xxxx");
+                loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
             } else {
