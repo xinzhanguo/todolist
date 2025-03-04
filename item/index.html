@@ -256,7 +256,7 @@
         position: absolute;
         top: 0px;
         right: 2px;
-    "><button onclick="openShareModal()">S</button></div>
+    "><button onclick="openSettingsModal()">S</button></div>
     <!-- Modal for adding/editing cards -->
     <div id="card-modal" class="modal">
         <div class="modal-content">
@@ -288,6 +288,25 @@
         </div>
     </div>
 
+    <!-- Modal for settings -->
+    <div id="show-modal" class="modal">
+        <div class="modal-content">
+            <h2>Show</h2>
+            <!-- Set Admin Password -->
+            <div class="setting-item">
+                <label for="admin-password">Admin Password:</label>
+                <input type="password" id="show-admin-password" placeholder="Enter admin password">
+                <button onclick="showAdminPassword()">Show</button>
+            </div>
+
+            <!-- Set Share Password -->
+            <div class="setting-item">
+                <label for="share-password">Share Password:</label>
+                <input type="password" id="show-share-password" placeholder="Enter share password">
+                <button onclick="showSharePassword()">Show</button>
+            </div>
+        </div>
+    </div>
     <script>
         let draggedCard = null;
         let currentListId = null;
@@ -299,16 +318,104 @@
             console.log(uid);
             return uid;
         }
+        function getkey(uid) {
+            const keysData = localStorage.getItem("todokey");
+            if (keysData) {
+                keyMap = JSON.parse(keysData);
+                if (uid in keyMap) {
+                    return keyMap[uid]
+                }
+            }
+            return "";
+        }
+        function setkey(uid, key) {
+            const keysData = localStorage.getItem("todokey");
+            let keyMap = {}
+            if (keysData) {
+                keyMap = JSON.parse(keysData);
+            }
+            keyMap[uid] = key
+            localStorage.setItem("todokey",JSON.stringify(keyMap))
+        }
+        function resetkey(uid, key) {
+            fetch("/api/key/" + uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "ML_KEY": getkey(uid),
+                    "ML_CODE": getcode(uid),
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: key // 将数据转换为 JSON 字符串
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    console.log("Success:", data); // 处理成功响应
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        function getcode(uid) {
+            const data = localStorage.getItem("todocode");
+            if (data) {
+                keyMap = JSON.parse(data);
+                if (uid in keyMap) {
+                    return keyMap[uid]
+                }
+            }
+            return "";
+        }
+        function setcode(uid, code) {
+            const keysData = localStorage.getItem("todocode");
+            let keyMap = {}
+            if (keysData) {
+                keyMap = JSON.parse(keysData);
+            }
+            keyMap[uid] = key
+            localStorage.setItem("todocode",JSON.stringify(keyMap))
+        }
+        function resetcode(uid, code) {
+            fetch("/api/code/" + uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "ML_KEY": getkey(uid),
+                    "ML_CODE": getcode(uid),
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: code // 将数据转换为 JSON 字符串
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    console.log("Success:", data); // 处理成功响应
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
         function get(uid) {
-            fetch("/api/" + uid, {
+            fetch("/api/todo/" + uid, {
                 method: "GET",
+                headers: {
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid)
+                }
             }).then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
-                    const { todo, inProgress, done, trash } = data;
+                    if(data.code == -1) {
+                        console.log(data);
+                        return
+                    }
+                    if(data.code == -2 || data.code == -3) {
+                        showModal();
+                        return
+                    }
+                    closeShowModal();
+                    const { todo, inProgress, done, trash } = JSON.parse(data.content);
                     renderCards("todo-cards", todo);
                     renderCards("in-progress-cards", inProgress);
                     renderCards("done-cards", done);
                     renderCards("trash-cards", trash, true);
+                    console.log(data.style);
                     return data;
                 })
                 .catch((error) => {
@@ -317,12 +424,33 @@
         }
         function save(uid, data) {
             // 使用 fetch 发送 POST 请求
-            fetch("/api/" + uid, {
+            fetch("/api/todo/" + uid, {
                 method: "POST", // 指定请求方法为 POST
                 headers: {
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid),
                     "Content-Type": "application/json" // 设置请求头
                 },
                 body: JSON.stringify(data) // 将数据转换为 JSON 字符串
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    console.log("Success:", data); // 处理成功响应
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        function setcode(code) {
+            uid = getuid()
+            fetch("/api/code/" + uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid),
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: code
             })
                 .then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
@@ -514,6 +642,16 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
         // Open settings modal
+        function showModal() {
+            document.getElementById("show-modal").style.display = "flex";
+        }
+        // Close settings modal
+        function closeShowModal() {
+            document.getElementById("show-modal").style.display = "none";
+        }
+
+
+        // Open settings modal
         function openSettingsModal() {
             document.getElementById("settings-modal").style.display = "flex";
         }
@@ -527,8 +665,22 @@
         function setAdminPassword() {
             const adminPassword = document.getElementById("admin-password").value.trim();
             if (adminPassword) {
-                localStorage.setItem("adminPassword", adminPassword);
-                alert("Admin password saved!");
+                resetkey(getuid(),adminPassword)
+                // localStorage.setItem("adminPassword", adminPassword);
+                // alert("Admin password saved!");
+            } else {
+                alert("Please enter a valid admin password.");
+            }
+        }
+
+        function showAdminPassword() {
+            const adminPassword = document.getElementById("show-admin-password").value.trim();
+            if (adminPassword) {
+                setkey(getuid(),adminPassword);
+                loadData();
+                // 
+                // localStorage.setItem("adminPassword", adminPassword);
+                // alert("Admin password saved!");
             } else {
                 alert("Please enter a valid admin password.");
             }
@@ -538,27 +690,33 @@
         function setSharePassword() {
             const sharePassword = document.getElementById("share-password").value.trim();
             if (sharePassword) {
-                localStorage.setItem("sharePassword", sharePassword);
-                alert("Share password saved!");
+                resetcode(getuid(),sharePassword);
+                loadData();
+                // localStorage.setItem("sharePassword", sharePassword);
+                // alert("Share password saved!");
             } else {
                 alert("Please enter a valid share password.");
             }
         }
 
-        // Load saved passwords on page load
-        function loadPasswords() {
-            const adminPassword = localStorage.getItem("adminPassword");
-            const sharePassword = localStorage.getItem("sharePassword");
-
-            if (adminPassword) {
-                document.getElementById("admin-password").value = adminPassword;
-            }
+        function showSharePassword() {
+            const sharePassword = document.getElementById("show-share-password").value.trim();
             if (sharePassword) {
-                document.getElementById("share-password").value = sharePassword;
+                setcode(getuid(),sharePassword)
+                // localStorage.setItem("sharePassword", sharePassword);
+                // alert("Share password saved!");
+            } else {
+                alert("Please enter a valid share password.");
             }
         }
-        // Initialize: Load passwords
-        loadPasswords();
+
+        // loadPasswords();
+        function showLanguage() {
+            var userLanguage = navigator.language || navigator.userLanguage; // 处理兼容性问题
+            document.body.innerHTML = "用户的首选语言是: " + userLanguage;
+        }
+
+        // showLanguage();
     </script>
 </body>
 
