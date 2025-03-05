@@ -282,8 +282,14 @@
             <!-- Set Share Password -->
             <div class="setting-item">
                 <label for="share-password">Set Share Password:</label>
-                <input type="password" id="share-password" placeholder="Enter share password">
+                <input type="text" id="share-password" placeholder="Enter share password">
                 <button onclick="setSharePassword()">Save</button>
+            </div>
+            <!-- Set Share Password -->
+            <div class="setting-item">
+                <label for="share-password">Set Style:</label>
+                <textarea id="setting-style"></textarea>
+                <button onclick="setthestyle()">Save</button>
             </div>
         </div>
     </div>
@@ -312,11 +318,34 @@
         let currentListId = null;
         let isEditing = false;
         let editingCard = null;
+        let version = 0;
+        let stylelen = document.head.childNodes.length;
         function getuid() {
             const path = window.location.pathname.split('/');
             const uid = path[path.length - 1];
             console.log(uid);
             return uid;
+        }
+        let uid = getuid();
+        function changeStyle(css) {
+            // 创建 <style> 元素
+            const style = document.createElement('style');
+            style.type = 'text/css';
+
+            // 插入 CSS 规则
+            if (style.styleSheet) {
+                // 适用于 IE8 及以下
+                style.styleSheet.cssText = css;
+            } else {
+                // 适用于现代浏览器
+                style.appendChild(document.createTextNode(css));
+            }
+            if(document.head.childNodes.length>stylelen) {
+                document.head[stylelen] = style;
+            } else {
+                // 将 <style> 元素插入到 <head> 中
+                document.head.appendChild(style);
+            }
         }
         function getkey(uid) {
             const keysData = localStorage.getItem("todokey");
@@ -392,6 +421,26 @@
                     console.error("Error:", error); // 处理错误
                 });
         }
+        function setstyle(uid, style) {
+            fetch("/api/style/" + uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid),
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: style // 将数据转换为 JSON 字符串
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    console.log("Success:", data); // 处理成功响应
+                    changeStyle(style);
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        
         function get(uid) {
             fetch("/api/todo/" + uid, {
                 method: "GET",
@@ -415,7 +464,12 @@
                     renderCards("in-progress-cards", inProgress);
                     renderCards("done-cards", done);
                     renderCards("trash-cards", trash, true);
-                    console.log(data.style);
+
+                    changeStyle(data.style);
+
+                    document.getElementById("setting-style").value = data.style;
+                    document.getElementById("share-password").value = data.sharecode;
+                    version = data.version;
                     return data;
                 })
                 .catch((error) => {
@@ -429,12 +483,18 @@
                 headers: {
                     "Ml-Key": getkey(uid),
                     "Ml-Code": getcode(uid),
+                    "Ml-Version": version,
                     "Content-Type": "application/json" // 设置请求头
                 },
                 body: JSON.stringify(data) // 将数据转换为 JSON 字符串
             })
                 .then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
+                    if(data.code == -4) {
+                        if(confirm("The todo is change, do you sure you want to refresh?")) {
+                            loadData();
+                        }
+                    }
                     console.log("Success:", data); // 处理成功响应
                 })
                 .catch((error) => {
@@ -444,16 +504,7 @@
 
         // Load data from localStorage
         function loadData() {
-            const savedData = get(getuid());
-            console.log(savedData);
-            if (savedData) {
-                // const { todo, inProgress, done, trash } = JSON.parse(savedData);
-                const { todo, inProgress, done, trash } = savedData;
-                renderCards("todo-cards", todo);
-                renderCards("in-progress-cards", inProgress);
-                renderCards("done-cards", done);
-                renderCards("trash-cards", trash, true);
-            }
+            get(getuid());
         }
 
         // Render cards to a list
@@ -686,8 +737,19 @@
             console.log(sharePassword)
             if (sharePassword) {
                 setcode(getuid(),sharePassword);
-                console.log("xxxx");
                 loadData();
+                // localStorage.setItem("sharePassword", sharePassword);
+                // alert("Share password saved!");
+            } else {
+                alert("Please enter a valid share password.");
+            }
+        }
+
+        function setthestyle() {
+            const custom_style = document.getElementById("setting-style").value.trim();
+            if (custom_style) {
+                setstyle(getuid(),custom_style);
+                // loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
             } else {
@@ -700,8 +762,39 @@
             var userLanguage = navigator.language || navigator.userLanguage; // 处理兼容性问题
             document.body.innerHTML = "用户的首选语言是: " + userLanguage;
         }
-
         // showLanguage();
+        function geVersion() {
+            console.log("这个方法将在3秒后运行");
+            uid = getuid();
+            fetch("/api/version/" + uid, {
+                method: "GET",
+                headers: {
+                    "Ml-Key": getkey(uid),
+                    "Ml-Code": getcode(uid)
+                }
+            }).then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    if(data.code == -1) {
+                        console.log(data);
+                        return
+                    }
+                    if(data.code == -2 || data.code == -3) {
+                        showModal();
+                        return
+                    }
+                    closeShowModal();
+                    if(data.version!=version) {
+                        loadData();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+                setTimeout(geVersion, 30000);
+        }
+
+        // 3秒后执行 geVersion
+        // geVersion();
     </script>
 </body>
 

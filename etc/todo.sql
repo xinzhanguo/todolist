@@ -6,12 +6,14 @@ CREATE TABLE `todos` (
   `tokey` char(128) NOT NULL DEFAULT '' COMMENT 'The tokey',
   `code` char(128) NOT NULL DEFAULT '' COMMENT 'The share code',
   `style` char(128) NOT NULL DEFAULT '' COMMENT 'The style',
+  `version` bigint(20) DEFAULT 0 COMMENT 'The version',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uid_index` (`uid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COMMENT='todos table';
 
 
 ALTER TABLE todos ADD COLUMN `token` char(128) NOT NULL DEFAULT '' COMMENT 'The token';
-ALTER TABLE todos ADD COLUMN `tokey` char(128) NOT NULL DEFAULT '' COMMENT 'The key';
+ALTER TABLE todos ADD COLUMN `tokey` char(128) NOT NULL DEFAULT '' COMMENT 'The tokey';
 ALTER TABLE todos ADD COLUMN `code` char(128) NOT NULL DEFAULT '' COMMENT 'The code';
 ALTER TABLE todos ADD COLUMN `style` char(128) NOT NULL DEFAULT '' COMMENT 'The style';
+ALTER TABLE todos ADD COLUMN `version` bigint(20) DEFAULT 0 COMMENT 'The version';

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -143,7 +144,36 @@ func main() {
 		b, _ := json.Marshal(data)
 		fmt.Fprint(w, string(b))
 	})
+	mux.HandleFunc("GET /api/version/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		// 解析 UUID 字符串
+		parsedUUID, err := uuid.Parse(id)
+		if err != nil {
+			fmt.Println("Error parsing UUID:", err)
+			return
+		}
+		fmt.Println("GET Parsed UUID:", parsedUUID)
+		token := getCookie(r, "ml_token")
+		key := r.Header.Get("Ml-Key")
+		code := r.Header.Get("Ml-Code")
+		fmt.Println(token, key, code)
+		data, err := dbclint.GetVersion(db.Data{UID: id, Token: token, Key: key, Code: code})
+		if err != nil {
+			fmt.Println(err)
+			if err.Error() == db.NEEDCODE {
+				fmt.Fprint(w, `{"code":-2,"msg":"need code or key"}`)
+				return
+			}
+			if err.Error() == db.NEEDKEY {
+				fmt.Fprint(w, `{"code":-3,"msg":"need key"}`)
+				return
+			}
+			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
+			return
+		}
 
+		fmt.Fprintf(w, `{"code":0,"msg":"ok","data":{"version": %d}}`, data)
+	})
 	mux.HandleFunc("POST /api/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")
 		// 解析 UUID 字符串
@@ -163,8 +193,13 @@ func main() {
 		token := getCookie(r, "ml_token")
 		key := r.Header.Get("ML_KEY")
 		code := r.Header.Get("ML_CODE")
-		if err := dbclint.SaveOrUpdate(db.Data{UID: id, Content: string(body), Token: token, Key: key, Code: code}); err != nil {
+		version, _ := strconv.ParseInt(r.Header.Get("Ml-Version"), 10, 64)
+		if err := dbclint.SaveOrUpdate(db.Data{UID: id, Content: string(body), Token: token, Key: key, Code: code, Version: version}); err != nil {
 			fmt.Println("db save:", err)
+			if err == fmt.Errorf("version is diff") {
+				fmt.Fprint(w, `{"code":-4,"msg":"db err"}`)
+				return
+			}
 			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
 			return
 		}

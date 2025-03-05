@@ -15,8 +15,9 @@ type Data struct {
 	Content string `json:"content"`
 	Token   string `json:"token"`
 	Key     string `json:"key"`
-	Code    string `json:"code"`
+	Code    string `json:"sharecode"`
 	Style   string `json:"style"`
+	Version int64  `json:"version"`
 }
 
 const (
@@ -33,12 +34,12 @@ func New(dsn string) (*Client, error) {
 }
 
 func (c *Client) Get(uid string) (*Data, error) {
-	query := `SELECT id, uid, content, token, tokey, code, style FROM todos WHERE uid = ?`
+	query := `SELECT id, uid, content, version, token, tokey, code, style FROM todos WHERE uid = ?`
 	row := c.db.QueryRow(query, uid)
 
 	data := &Data{}
 	data.UID = uid
-	err := row.Scan(&data.ID, &data.UID, &data.Content, &data.Token, &data.Key, &data.Code, &data.Style)
+	err := row.Scan(&data.ID, &data.UID, &data.Content, &data.Version, &data.Token, &data.Key, &data.Code, &data.Style)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -49,7 +50,7 @@ func (c *Client) Get(uid string) (*Data, error) {
 }
 
 func (c *Client) Save(data Data) error {
-	query := `INSERT INTO todos (uid, content, token, tokey, code, style) VALUES (?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO todos (uid, content, token, tokey, code, style, version) VALUES (?, ?, ?, ?, ?, ?, 1)`
 	result, err := c.db.Exec(query, data.UID, data.Content, data.Token, data.Key, data.Code, data.Style)
 	if err != nil {
 		return fmt.Errorf("failed to insert data: %v", err)
@@ -91,6 +92,31 @@ func (c *Client) Update(data Data) error {
 	return nil
 }
 
+func (c *Client) UpdateContent(data Data) error {
+	query := `UPDATE todos SET content = ?, version = version+1 WHERE uid = ? and version = ?`
+	result, err := c.db.Exec(
+		query,
+		data.Content,
+		data.UID,
+		data.Version,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update data: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected, data with ID %s not found", data.UID)
+	}
+
+	fmt.Printf("Data updated successfully, rows affected: %d\n", rowsAffected)
+	return nil
+}
+
 func (c *Client) SaveOrUpdate(data Data) error {
 	d, err := c.Get(data.UID)
 	if err != nil {
@@ -99,18 +125,11 @@ func (c *Client) SaveOrUpdate(data Data) error {
 		}
 		return err
 	}
-	if d.Token == data.Token {
-		return c.Update(data)
+	if d.Version != data.Version {
+		return fmt.Errorf("version is diff")
 	}
-	if d.Key == data.Key {
-		data.Token = d.Token
-		return c.Update(data)
-	}
-	if d.Code == data.Code {
-		data.Token = d.Token
-		data.Key = d.Key
-		data.Code = d.Code
-		return c.Update(data)
+	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code {
+		return c.UpdateContent(data)
 	}
 	return fmt.Errorf("not allowed")
 }
@@ -127,14 +146,14 @@ func (c *Client) GetAllowed(data Data) (*Data, error) {
 	if d.Token == data.Token {
 		return d, nil
 	}
+	d.Token = ""
 	if d.Key != "" && d.Key == data.Key {
-		d.Token = ""
+		d.Key = ""
 		return d, nil
 	}
 	if d.Code != "" && d.Code == data.Code {
-		d.ID = 0
-		d.Token = ""
 		d.Key = ""
+		d.Code = ""
 		return d, nil
 	}
 	if d.Code != "" {
@@ -216,4 +235,18 @@ func (c *Client) SetStyle(data Data, style string) error {
 		return c.Set(data.UID, "style", style)
 	}
 	return fmt.Errorf("not allowed")
+}
+
+func (c *Client) GetVersion(data Data) (int64, error) {
+	d, err := c.Get(data.UID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code {
+		return d.Version, nil
+	}
+	return 0, fmt.Errorf("not allowed")
 }
