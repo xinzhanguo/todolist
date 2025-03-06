@@ -194,7 +194,7 @@
         }
 
         .setting-item input {
-            width: 100%;
+            width: 75%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -292,26 +292,27 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
             <h2>Settings</h2>
+            <form>
+                <!-- Set Admin Password -->
+                <div class="setting-item">
+                    <label for="admin-password">Set Admin Password:</label>
+                    <input type="password" id="admin-password" placeholder="Enter admin password">
+                    <button onclick="setAdminPassword()">Save</button>
+                </div>
 
-            <!-- Set Admin Password -->
-            <div class="setting-item">
-                <label for="admin-password">Set Admin Password:</label>
-                <input type="password" id="admin-password" placeholder="Enter admin password">
-                <button onclick="setAdminPassword()">Save</button>
-            </div>
-
-            <!-- Set Share Password -->
-            <div class="setting-item">
-                <label for="share-password">Set Share Password:</label>
-                <input type="text" id="share-password" placeholder="Enter share password">
-                <button onclick="setSharePassword()">Save</button>
-            </div>
-            <!-- Set Share Password -->
-            <div class="setting-item">
-                <label for="share-password">Set Style:</label>
-                <textarea id="setting-style"></textarea>
-                <button onclick="setthestyle()">Save</button>
-            </div>
+                <!-- Set Share Password -->
+                <div class="setting-item">
+                    <label for="share-password">Set Share Password:</label>
+                    <input type="text" id="share-password" placeholder="Enter share password">
+                    <button onclick="setSharePassword()">Save</button>
+                </div>
+                <!-- Set Share Password -->
+                <div class="setting-item">
+                    <label for="share-password">Set Style:</label>
+                    <textarea id="setting-style"></textarea>
+                    <button onclick="setthestyle()">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -319,19 +320,22 @@
     <div id="show-modal" class="modal">
         <div class="modal-content">
             <h2>Show</h2>
-            <!-- Set Admin Password -->
-            <div class="setting-item">
-                <label for="admin-password">Admin Password:</label>
-                <input type="password" id="show-admin-password" placeholder="Enter admin password">
-                <button onclick="showAdminPassword()">Show</button>
-            </div>
+            <form>
+                <!-- Set Admin Password -->
+                <div class="setting-item">
+                    <label for="admin-password">Admin Password:</label>
+                    <input type="password" id="show-admin-password" placeholder="Enter admin password">
+                    <button onclick="showAdminPassword()">Show</button>
 
-            <!-- Set Share Password -->
-            <div class="setting-item">
-                <label for="share-password">Share Password:</label>
-                <input type="password" id="show-share-password" placeholder="Enter share password">
-                <button onclick="showSharePassword()">Show</button>
-            </div>
+                </div>
+
+                <!-- Set Share Password -->
+                <div class="setting-item">
+                    <label for="share-password">Share Password:</label>
+                    <input type="password" id="show-share-password" placeholder="Enter share password">
+                    <button onclick="showSharePassword()">Show</button>
+                </div>
+            </form>
         </div>
     </div>
     <script>
@@ -396,6 +400,15 @@
             }
             delete keyMap[uid]
             localStorage.setItem("todokey", JSON.stringify(keyMap))
+        }
+        function delcode(uid){
+            const keysData = localStorage.getItem("tdcode");
+            let keyMap = {}
+            if (keysData) {
+                keyMap = JSON.parse(keysData);
+            }
+            delete keyMap[uid]
+            localStorage.setItem("tdcode", JSON.stringify(keyMap))
         }
         function resetkey(uid, key) {
             fetch("/api/key/" + uid, {
