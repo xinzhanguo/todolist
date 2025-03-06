@@ -252,17 +252,32 @@
             <div class="cards" id="trash-cards"></div>
         </div>
     </div>
-    <div style="
-        position: absolute;
-        top: 0px;
-        right: 2px;
-    "><button onclick="openSettingsModal()">S</button></div>
+    <div style="position: absolute;top: 0px;right: 2px;">
+        <a href="https://maladofo.com/todo/" target="_blank" title="new board">
+            <img src="https://maladofo.com/icons/new.png" width="40px">
+        </a>
+    </div>
+    <div style="position: absolute;top: 40px;right: 2px;">
+        <a href="#" onclick="openSettingsModal()" title="setting">
+            <img src="https://maladofo.com/icons/settings.png" width="40px">
+        </a>
+    </div>
+    <div style="position: absolute;top: 80px;right: 2px;">
+        <a href="https://maladofo.com/chat/1762e5ae-6c8f-4447-9db2-d551ff8c738f" title="feedback" target="_blank">
+            <img src="https://maladofo.com/icons/comment.png" width="40px">
+        </a>
+    </div>
+    <div style="position: absolute;top: 120px;right: 2px;">
+        <a href="https://maladofo.com/info/" title="information">
+            <img src="https://maladofo.com/icons/information.png" width="40px">
+        </a>
+    </div>
+    <div style="position: absolute;top: 160px;right: 2px;">
+        <a href="#" onclick="exportdata()" title="download">
+            <img src="https://maladofo.com/icons/download.png" width="40px">
+        </a>
+    </div>
 
-    <div style="
-        position: absolute;
-        top: 65px;
-        right: 2px;
-    "><a href="/chat/1762e5ae-6c8f-4447-9db2-d551ff8c738f" class="settings-btn">F</a></div>
     <!-- Modal for adding/editing cards -->
     <div id="card-modal" class="modal">
         <div class="modal-content">
@@ -510,7 +525,7 @@
                 .then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
                     if (data.code != 0) {
-                        setkey(uid,"")
+                        setkey(uid, "")
                         if (confirm("The todo is change, do you sure you want to refresh?")) {
                             loadData();
                         }
@@ -664,6 +679,38 @@
             };
             // localStorage.setItem("trelloData", JSON.stringify(data));
             save(getuid(), data);
+        }
+        function exportdata() {
+            const todo = Array.from(document.getElementById("todo-cards").children).map(card => card.querySelector("span").textContent);
+            const inProgress = Array.from(document.getElementById("in-progress-cards").children).map(card => card.querySelector("span").textContent);
+            const done = Array.from(document.getElementById("done-cards").children).map(card => card.querySelector("span").textContent);
+            const trash = Array.from(document.getElementById("trash-cards").children).map(card => card.querySelector("span").textContent);
+
+            const data = {
+                todo,
+                inProgress,
+                done,
+                trash
+            };
+            // 将 JSON 数据转换为字符串
+            const jsonString = JSON.stringify(data, null, 2); // 第三个参数用于格式化（缩进 2 个空格）
+
+            // 创建一个 Blob 对象
+            const blob = new Blob([jsonString], { type: "application/json" });
+
+            // 创建一个下载链接
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "todolist.json"; // 默认文件名为 data.json
+
+            // 触发下载
+            document.body.appendChild(a);
+            a.click();
+
+            // 清理 URL 对象
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // Initialize: Load data
