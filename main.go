@@ -18,14 +18,23 @@ import (
 )
 
 //go:embed home/index.html
-var home string
+var homeHtml string
 
 //go:embed item/index.html
-var item string
+var itemHtml string
+
+//go:embed chat/index.html
+var chatHtml string
 
 type Conf struct {
 	Dsn  string `yaml:"dsn"`
 	Port int    `yaml:"port"`
+}
+
+type Result struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data"`
 }
 
 func getCookie(r *http.Request, key string) string {
@@ -90,7 +99,7 @@ func main() {
 
 	mux.HandleFunc("GET /todo/", func(w http.ResponseWriter, r *http.Request) {
 		setCookieHandler(w, r)
-		fmt.Fprint(w, home)
+		fmt.Fprint(w, homeHtml)
 	})
 
 	mux.HandleFunc("GET /todo/new", func(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +117,7 @@ func main() {
 		}
 		fmt.Println("Parsed UUID:", parsedUUID)
 		setCookieHandler(w, r)
-		fmt.Fprint(w, item)
+		fmt.Fprint(w, itemHtml)
 	})
 
 	mux.HandleFunc("GET /api/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +192,7 @@ func main() {
 			fmt.Fprint(w, `{"code":-1,"msg":"uid err"}`)
 			return
 		}
-
+		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			fmt.Println("io ReadAll:", err)
@@ -216,7 +225,7 @@ func main() {
 			fmt.Fprint(w, `{"code":-1,"msg":"uid err"}`)
 			return
 		}
-
+		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			fmt.Println("io ReadAll:", err)
@@ -243,7 +252,7 @@ func main() {
 			fmt.Fprint(w, `{"code":-1,"msg":"uid err"}`)
 			return
 		}
-
+		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			fmt.Println("io ReadAll:", err)
@@ -270,13 +279,14 @@ func main() {
 			fmt.Fprint(w, `{"code":-1,"msg":"uid err"}`)
 			return
 		}
-
+		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			fmt.Println("io ReadAll:", err)
 			fmt.Fprint(w, `{"code":-1,"msg":"body err"}`)
 			return
 		}
+
 		token := getCookie(r, "ml_token")
 		key := r.Header.Get("ML_KEY")
 		code := r.Header.Get("ML_CODE")
@@ -286,6 +296,64 @@ func main() {
 			return
 		}
 		fmt.Println("POST Parsed UUID:", parsedUUID)
+		fmt.Fprint(w, `{"code":0,"msg":"ok"}`)
+	})
+	// TODO: 实现chat功能
+	mux.HandleFunc("GET /chat/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		// 解析 UUID 字符串
+		parsedUUID, err := uuid.Parse(id)
+		if err != nil {
+			fmt.Println("Error parsing UUID:", err)
+			return
+		}
+		fmt.Println("Parsed UUID:", parsedUUID)
+		setCookieHandler(w, r)
+		fmt.Fprint(w, chatHtml)
+	})
+	mux.HandleFunc("GET /api/chat/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		// 解析 UUID 字符串
+		parsedUUID, err := uuid.Parse(id)
+		if err != nil {
+			fmt.Println("Error parsing UUID:", err)
+			return
+		}
+		fmt.Println("GET Parsed UUID:", parsedUUID)
+		token := getCookie(r, "ml_token")
+		fmt.Println(token)
+		data, err := dbclint.GetChat(id, token)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Fprint(w, `{"code":-1,"msg":"db err","data":[]}`)
+			return
+		}
+		res := Result{Code: 0, Msg: "ok", Data: data}
+		b, _ := json.Marshal(res)
+		fmt.Fprint(w, string(b))
+	})
+	mux.HandleFunc("POST /api/chat/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		// 解析 UUID 字符串
+		parsedUUID, err := uuid.Parse(id)
+		if err != nil {
+			fmt.Println("Error parsing UUID:", err)
+			return
+		}
+		fmt.Println("GET Parsed UUID:", parsedUUID)
+		defer r.Body.Close()
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			fmt.Println("io ReadAll:", err)
+			fmt.Fprint(w, `{"code":-1,"msg":"body err"}`)
+			return
+		}
+		token := getCookie(r, "ml_token")
+		if err := dbclint.SendChat(db.Chat{Content: string(body), UID: id, Token: token, Creator: token}); err != nil {
+			fmt.Println(err)
+			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
+			return
+		}
 		fmt.Fprint(w, `{"code":0,"msg":"ok"}`)
 	})
 	fmt.Println("0.0.0.0:", conf.Port)

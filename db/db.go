@@ -20,6 +20,14 @@ type Data struct {
 	Version int64  `json:"version"`
 }
 
+type Chat struct {
+	ID      int64  `json:"id"`
+	UID     string `json:"uid"` // 谁收
+	Content string `json:"content"`
+	Token   string `json:"token"` //
+	Creator string `json:"creator"`
+}
+
 const (
 	NEEDKEY  = "not allowed,need key"
 	NEEDCODE = "not allowed,need code"
@@ -128,7 +136,7 @@ func (c *Client) SaveOrUpdate(data Data) error {
 	if d.Version != data.Version {
 		return fmt.Errorf("version is diff")
 	}
-	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code {
+	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code || d.Key == "" {
 		return c.UpdateContent(data)
 	}
 	return fmt.Errorf("not allowed")
@@ -249,4 +257,51 @@ func (c *Client) GetVersion(data Data) (int64, error) {
 		return d.Version, nil
 	}
 	return 0, fmt.Errorf("not allowed")
+}
+
+func (c *Client) SendChat(chat Chat) error {
+	query := `INSERT INTO chats (uid, content, token, creator) VALUES (?, ?, ?, ?)`
+	result, err := c.db.Exec(query, chat.UID, chat.Content, chat.Token, chat.Creator)
+	if err != nil {
+		return fmt.Errorf("failed to insert data: %v", err)
+	}
+
+	chat.ID, err = result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert ID: %v", err)
+	}
+
+	fmt.Printf("Data saved with ID: %d\n", chat.ID)
+	return nil
+}
+
+func (c *Client) GetChat(uid, token string) ([]Chat, error) {
+	query := `SELECT id,content,creator FROM chats WHERE uid = ? AND token=? ORDER BY id DESC limit 100`
+	rows, err := c.db.Query(query, uid, token)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	// 遍历查询结果
+	var chats []Chat
+	for rows.Next() {
+		var chat Chat
+		err := rows.Scan(&chat.ID, &chat.Content, &chat.Creator)
+		if err != nil {
+			return nil, err
+		}
+		if chat.Creator != token {
+			chat.Creator = "other"
+		} else {
+			chat.Creator = "user"
+		}
+		chats = append(chats, chat)
+	}
+
+	// 检查遍历过程中是否有错误
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return chats, nil
 }

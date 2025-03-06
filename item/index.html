@@ -257,6 +257,12 @@
         top: 0px;
         right: 2px;
     "><button onclick="openSettingsModal()">S</button></div>
+
+    <div style="
+        position: absolute;
+        top: 65px;
+        right: 2px;
+    "><a href="/chat/1762e5ae-6c8f-4447-9db2-d551ff8c738f" class="settings-btn">F</a></div>
     <!-- Modal for adding/editing cards -->
     <div id="card-modal" class="modal">
         <div class="modal-content">
@@ -341,7 +347,7 @@
                 // 适用于现代浏览器
                 style.appendChild(document.createTextNode(css));
             }
-            if(document.head.childNodes.length>stylelen) {
+            if (document.head.childNodes.length > stylelen) {
                 document.head[stylelen] = style;
             } else {
                 // 将 <style> 元素插入到 <head> 中
@@ -365,7 +371,16 @@
                 keyMap = JSON.parse(keysData);
             }
             keyMap[uid] = key
-            localStorage.setItem("todokey",JSON.stringify(keyMap))
+            localStorage.setItem("todokey", JSON.stringify(keyMap))
+        }
+        function delkey(uid) {
+            const keysData = localStorage.getItem("todokey");
+            let keyMap = {}
+            if (keysData) {
+                keyMap = JSON.parse(keysData);
+            }
+            delete keyMap[uid]
+            localStorage.setItem("todokey", JSON.stringify(keyMap))
         }
         function resetkey(uid, key) {
             fetch("/api/key/" + uid, {
@@ -402,7 +417,7 @@
                 keyMap = JSON.parse(keysData);
             }
             keyMap[uid] = code
-            localStorage.setItem("tdcode",JSON.stringify(keyMap))
+            localStorage.setItem("tdcode", JSON.stringify(keyMap))
         }
         function resetcode(uid, code) {
             fetch("/api/code/" + uid, {
@@ -441,7 +456,7 @@
                     console.error("Error:", error); // 处理错误
                 });
         }
-        
+
         function get(uid) {
             fetch("/api/todo/" + uid, {
                 method: "GET",
@@ -451,11 +466,13 @@
                 }
             }).then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
-                    if(data.code == -1) {
+                    if (data.code == -1) {
                         console.log(data);
                         return
                     }
-                    if(data.code == -2 || data.code == -3) {
+                    if (data.code == -2 || data.code == -3) {
+                        delkey(uid)
+                        delcode(uid)
                         showModal();
                         return
                     }
@@ -492,8 +509,9 @@
             })
                 .then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
-                    if(data.code != 0 ) {
-                        if(confirm("The todo is change, do you sure you want to refresh?")) {
+                    if (data.code != 0) {
+                        setkey(uid,"")
+                        if (confirm("The todo is change, do you sure you want to refresh?")) {
                             loadData();
                         }
                     } else {
@@ -702,7 +720,7 @@
         function setAdminPassword() {
             const adminPassword = document.getElementById("admin-password").value.trim();
             if (adminPassword) {
-                resetkey(getuid(),adminPassword)
+                resetkey(getuid(), adminPassword)
                 // localStorage.setItem("adminPassword", adminPassword);
                 // alert("Admin password saved!");
             } else {
@@ -713,9 +731,8 @@
         function showAdminPassword() {
             const adminPassword = document.getElementById("show-admin-password").value.trim();
             if (adminPassword) {
-                setkey(getuid(),adminPassword);
+                setkey(getuid(), adminPassword);
                 loadData();
-                // 
                 // localStorage.setItem("adminPassword", adminPassword);
                 // alert("Admin password saved!");
             } else {
@@ -727,7 +744,7 @@
         function setSharePassword() {
             const sharePassword = document.getElementById("share-password").value.trim();
             if (sharePassword) {
-                resetcode(getuid(),sharePassword);
+                resetcode(getuid(), sharePassword);
                 // loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
@@ -740,7 +757,7 @@
             const sharePassword = document.getElementById("show-share-password").value.trim();
             console.log(sharePassword)
             if (sharePassword) {
-                setcode(getuid(),sharePassword);
+                setcode(getuid(), sharePassword);
                 loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
@@ -752,7 +769,7 @@
         function setthestyle() {
             const custom_style = document.getElementById("setting-style").value.trim();
             if (custom_style) {
-                setstyle(getuid(),custom_style);
+                setstyle(getuid(), custom_style);
                 // loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
@@ -778,23 +795,23 @@
                 }
             }).then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
-                    if(data.code == -1) {
+                    if (data.code == -1) {
                         console.log(data);
                         return
                     }
-                    if(data.code == -2 || data.code == -3) {
+                    if (data.code == -2 || data.code == -3) {
                         showModal();
                         return
                     }
                     closeShowModal();
-                    if(data.version!=version) {
+                    if (data.version != version) {
                         loadData();
                     }
                 })
                 .catch((error) => {
                     console.error("Error:", error); // 处理错误
                 });
-                setTimeout(geVersion, 30000);
+            setTimeout(geVersion, 30000);
         }
 
         // 3秒后执行 geVersion
