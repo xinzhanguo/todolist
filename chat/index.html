@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>与开发团队聊天</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .chat-container {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #07c160;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .chat-messages {
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            background-color: #e5e5e5;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.other {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .message.user .message-bubble {
+            background-color: #07c160;
+            color: #fff;
+            margin-left: auto;
+        }
+
+        .message.other .message-bubble {
+            background-color: #fff;
+            color: #000;
+            margin-right: auto;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: #f5f5f5;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 18px;
+        }
+
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #07c160;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #05a050;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            与产品聊天
+        </div>
+        <div class="chat-messages" id="chat-room">
+        </div>
+        <div class="chat-input">
+            <input type="text" id="input" placeholder="输入消息...">
+            <button onclick="sendMsg()" id="send">发送</button>
+        </div>
+    </div>
+    <script>
+        function getuid() {
+            const path = window.location.pathname.split('/');
+            const uid = path[path.length - 1];
+            console.log(uid);
+            return uid;
+        }
+        const uid = getuid();
+        // Set share password
+        function sendMsg() {
+            const msg = document.getElementById("input").value.trim();
+            if (msg) {
+                send(msg);
+                document.getElementById("input").value = ''; 
+            } else {
+                alert("Please enter a message.");
+            }
+        }
+        const inputBox = document.getElementById('input');
+        // 监听输入框的 keydown 事件
+        inputBox.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') { // 检查是否按下了回车键
+                event.preventDefault(); // 阻止默认行为（如换行）
+                sendMsg();
+            }
+        });
+        // Create a card element
+        function createMsg(msg) {
+            className = "other"
+            if(msg.creator!="other") {
+                className = "user"
+            }
+            const message = document.createElement("div");
+            message.className = "message "+className;
+
+            // Card content
+            const msgContent = document.createElement("div");
+            msgContent.className = "message-bubble"
+            msgContent.textContent = msg.content;
+            message.appendChild(msgContent);
+            return message;
+        }
+        // Render cards to a list
+        function renderChats(listId, cards) {
+            const container = document.getElementById(listId);
+            container.innerHTML = "";
+            cards.forEach(content => {
+                const card = createMsg(content);
+                container.prepend(card);
+            });
+            setToBottom();
+        }
+        function setToBottom() {
+            const divElement = document.getElementById("chat-room");
+            divElement.scrollTop = divElement.scrollHeight;
+        }
+        function appendMsg(content) {
+            const container = document.getElementById("chat-room");
+            const card = createMsg({"content":content,"creator":"user"});
+            container.appendChild(card);
+            setToBottom();
+        }
+        function get() {
+            fetch("/api/chat/"+uid, {
+                method: "GET",
+            }).then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    if(data.code != 0) {
+                        console.log(data);
+                        return
+                    }
+                    renderChats("chat-room", data.data);
+                    return data;
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        get();
+        function send(msg) {
+            // 使用 fetch 发送 POST 请求
+            fetch("/api/chat/"+uid, {
+                method: "POST", // 指定请求方法为 POST
+                headers: {
+                    "Content-Type": "application/json" // 设置请求头
+                },
+                body: msg
+            })
+                .then(response => response.json()) // 解析响应为 JSON
+                .then(data => {
+                    if (data.code != 0) {
+                        alert("send msg is err");
+                    }
+                    appendMsg(msg);
+                    console.log("Success:", data); // 处理成功响应
+                })
+                .catch((error) => {
+                    console.error("Error:", error); // 处理错误
+                });
+        }
+        
+        function updateMsg() {
+            console.log("这个方法将在30秒后运行");
+            get();
+            setTimeout(updateMsg, 30000);
+        }
+        updateMsg();
+    </script>
+</body>
+
+</html>

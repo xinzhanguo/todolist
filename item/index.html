@@ -319,6 +319,7 @@
         let isEditing = false;
         let editingCard = null;
         let version = 0;
+        let loadtime = new Date();
         let stylelen = document.head.childNodes.length;
         function getuid() {
             const path = window.location.pathname.split('/');
@@ -459,6 +460,7 @@
                         return
                     }
                     closeShowModal();
+                    loadtime = new Date();
                     const { todo, inProgress, done, trash } = JSON.parse(data.content);
                     renderCards("todo-cards", todo);
                     renderCards("in-progress-cards", inProgress);
@@ -490,10 +492,12 @@
             })
                 .then(response => response.json()) // 解析响应为 JSON
                 .then(data => {
-                    if(data.code == -4) {
+                    if(data.code != 0 ) {
                         if(confirm("The todo is change, do you sure you want to refresh?")) {
                             loadData();
                         }
+                    } else {
+                        loadData();
                     }
                     console.log("Success:", data); // 处理成功响应
                 })
@@ -640,7 +644,7 @@
                 done,
                 trash
             };
-            localStorage.setItem("trelloData", JSON.stringify(data));
+            // localStorage.setItem("trelloData", JSON.stringify(data));
             save(getuid(), data);
         }
 
