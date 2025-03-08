@@ -136,6 +136,7 @@ func (c *Client) SaveOrUpdate(data Data) error {
 	if d.Version != data.Version {
 		return fmt.Errorf("version is diff")
 	}
+	fmt.Printf("%v , %v", d, data)
 	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code || d.Key == "" {
 		return c.UpdateContent(data)
 	}

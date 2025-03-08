@@ -200,8 +200,8 @@ func main() {
 			return
 		}
 		token := getCookie(r, "ml_token")
-		key := r.Header.Get("ML_KEY")
-		code := r.Header.Get("ML_CODE")
+		key := r.Header.Get("Ml_Key")
+		code := r.Header.Get("Ml_Code")
 		version, _ := strconv.ParseInt(r.Header.Get("Ml-Version"), 10, 64)
 		if err := dbclint.SaveOrUpdate(db.Data{UID: id, Content: string(body), Token: token, Key: key, Code: code, Version: version}); err != nil {
 			fmt.Println("db save:", err)
@@ -233,8 +233,8 @@ func main() {
 			return
 		}
 		token := getCookie(r, "ml_token")
-		key := r.Header.Get("ML_KEY")
-		code := r.Header.Get("ML_CODE")
+		key := r.Header.Get("Ml_Key")
+		code := r.Header.Get("Ml_Code")
 		if err := dbclint.SetKey(db.Data{UID: id, Token: token, Key: key, Code: code}, string(body)); err != nil {
 			fmt.Println("db save:", err)
 			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
@@ -260,8 +260,8 @@ func main() {
 			return
 		}
 		token := getCookie(r, "ml_token")
-		key := r.Header.Get("ML_KEY")
-		code := r.Header.Get("ML_CODE")
+		key := r.Header.Get("Ml_Key")
+		code := r.Header.Get("Ml_Code")
 		if err := dbclint.SetCode(db.Data{UID: id, Token: token, Key: key, Code: code}, string(body)); err != nil {
 			fmt.Println("db save:", err)
 			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
@@ -288,8 +288,8 @@ func main() {
 		}
 
 		token := getCookie(r, "ml_token")
-		key := r.Header.Get("ML_KEY")
-		code := r.Header.Get("ML_CODE")
+		key := r.Header.Get("Ml_Key")
+		code := r.Header.Get("Ml_Code")
 		if err := dbclint.SetStyle(db.Data{UID: id, Token: token, Key: key, Code: code}, string(body)); err != nil {
 			fmt.Println("db save:", err)
 			fmt.Fprint(w, `{"code":-1,"msg":"db err"}`)
