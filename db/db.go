@@ -194,7 +194,8 @@ func (c *Client) Set(uid, key, val string) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no rows affected, data with ID %s not found", uid)
+		fmt.Printf("no rows affected, data with ID %s not found", uid)
+		return nil
 	}
 
 	fmt.Printf("Data updated successfully, rows affected: %d\n", rowsAffected)

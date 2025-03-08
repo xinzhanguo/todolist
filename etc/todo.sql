@@ -18,7 +18,12 @@ ALTER TABLE todos ADD COLUMN `code` char(128) NOT NULL DEFAULT '' COMMENT 'The c
 ALTER TABLE todos ADD COLUMN `style` char(128) NOT NULL DEFAULT '' COMMENT 'The style';
 ALTER TABLE todos ADD COLUMN `version` bigint(20) DEFAULT 0 COMMENT 'The version';
 
+ALTER TABLE todos drop COLUMN `code`;
+  `code` char(128) NOT NULL DEFAULT '' COMMENT 'The share code',
+ALTER TABLE todos ADD COLUMN `code` char(128) NOT NULL DEFAULT '' COMMENT 'The code';
 
+
+mysql100
 -- uid: roomid
 -- token: who can see
 -- creator: who writer
