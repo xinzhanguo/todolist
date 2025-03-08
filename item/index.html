@@ -506,18 +506,19 @@
                     }
                     closeShowModal();
                     loadtime = new Date();
-                    const { todo, inProgress, done, trash } = JSON.parse(data.content);
+                    console.log(data)
+                    const { todo, inProgress, done, trash } = JSON.parse(data.data.content);
                     renderCards("todo-cards", todo);
                     renderCards("in-progress-cards", inProgress);
                     renderCards("done-cards", done);
                     renderCards("trash-cards", trash, true);
 
-                    changeStyle(data.style);
+                    changeStyle(data.data.style);
 
-                    document.getElementById("setting-style").value = data.style;
-                    document.getElementById("share-password").value = data.sharecode;
-                    version = data.version;
-                    return data;
+                    document.getElementById("setting-style").value = data.data.style;
+                    document.getElementById("share-password").value = data.data.sharecode;
+                    version = data.data.version;
+                    // return data;
                 })
                 .catch((error) => {
                     console.error("Error:", error); // 处理错误

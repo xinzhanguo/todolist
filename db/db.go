@@ -28,9 +28,11 @@ type Chat struct {
 	Creator string `json:"creator"`
 }
 
-const (
-	NEEDKEY  = "not allowed,need key"
-	NEEDCODE = "not allowed,need code"
+var (
+	ErrNeedCode        = fmt.Errorf("not allowed,need code")
+	ErrNeedKey         = fmt.Errorf("not allowed,need key")
+	ErrVersionConflict = fmt.Errorf("version is diff")
+	ErrNotAllowed      = fmt.Errorf("not allowed")
 )
 
 func New(dsn string) (*Client, error) {
@@ -134,13 +136,13 @@ func (c *Client) SaveOrUpdate(data Data) error {
 		return err
 	}
 	if d.Version != data.Version {
-		return fmt.Errorf("version is diff")
+		return ErrVersionConflict
 	}
 	fmt.Printf("%v , %v", d, data)
 	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code || d.Key == "" {
 		return c.UpdateContent(data)
 	}
-	return fmt.Errorf("not allowed")
+	return ErrNotAllowed
 }
 
 func (c *Client) GetAllowed(data Data) (*Data, error) {
@@ -166,10 +168,10 @@ func (c *Client) GetAllowed(data Data) (*Data, error) {
 		return d, nil
 	}
 	if d.Code != "" {
-		return nil, fmt.Errorf(NEEDCODE)
+		return nil, ErrNeedCode
 	}
 	if d.Key != "" {
-		return nil, fmt.Errorf(NEEDKEY)
+		return nil, ErrNeedKey
 	}
 	d.Token = ""
 	d.Key = ""
@@ -227,7 +229,7 @@ func (c *Client) SetCode(data Data, code string) error {
 	if d.Key != "" || d.Key == data.Key {
 		return c.Set(data.UID, "code", code)
 	}
-	return fmt.Errorf("not allowed")
+	return ErrNotAllowed
 }
 
 func (c *Client) SetStyle(data Data, style string) error {
@@ -244,7 +246,7 @@ func (c *Client) SetStyle(data Data, style string) error {
 	if d.Code != "" || d.Code == data.Code {
 		return c.Set(data.UID, "style", style)
 	}
-	return fmt.Errorf("not allowed")
+	return ErrNotAllowed
 }
 
 func (c *Client) GetVersion(data Data) (int64, error) {
@@ -258,7 +260,7 @@ func (c *Client) GetVersion(data Data) (int64, error) {
 	if d.Token == data.Token || d.Key == data.Key || d.Code == data.Code {
 		return d.Version, nil
 	}
-	return 0, fmt.Errorf("not allowed")
+	return 0, ErrNotAllowed
 }
 
 func (c *Client) SendChat(chat Chat) error {
