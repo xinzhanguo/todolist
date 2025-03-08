@@ -312,6 +312,12 @@
                     <textarea id="setting-style"></textarea>
                     <button onclick="setthestyle()">Save</button>
                 </div>
+                <!-- load -->
+                <div class="setting-item">
+                    <label for="share-password">Load Json:</label>
+                    <textarea id="load-json"></textarea>
+                    <button onclick="showload()">Preview</button>
+                </div>
             </form>
         </div>
     </div>
@@ -401,7 +407,7 @@
             delete keyMap[uid]
             localStorage.setItem("todokey", JSON.stringify(keyMap))
         }
-        function delcode(uid){
+        function delcode(uid) {
             const keysData = localStorage.getItem("tdcode");
             let keyMap = {}
             if (keysData) {
@@ -834,6 +840,19 @@
                 // loadData();
                 // localStorage.setItem("sharePassword", sharePassword);
                 // alert("Share password saved!");
+            } else {
+                alert("Please enter a valid share password.");
+            }
+        }
+
+        function showload() {
+            const custom_json = document.getElementById("load-json").value.trim();
+            if (custom_json) {
+                const { todo, inProgress, done, trash } = JSON.parse(custom_json);
+                renderCards("todo-cards", todo);
+                renderCards("in-progress-cards", inProgress);
+                renderCards("done-cards", done);
+                renderCards("trash-cards", trash, true);
             } else {
                 alert("Please enter a valid share password.");
             }
