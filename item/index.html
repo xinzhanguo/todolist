@@ -510,6 +510,12 @@
                         showModal();
                         return
                     }
+                    if (data.code==403) {
+                        delkey(uid)
+                        delcode(uid)
+                        showModal();
+                        return
+                    }
                     closeShowModal();
                     loadtime = new Date();
                     console.log(data)
